@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>iPad 程式碼極速預覽神器 | 貼上即玩</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Plus+Jakarta+Sans:wght@600;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', '"Noto Sans TC"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              500: '#2563EB',
+              600: '#1D4ED8',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* 針對 iPad 觸控優化 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+    textarea, input {
+      user-select: auto;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans overflow-hidden">
+
+  <!-- 頂部操作工具列（專為 iPad 大按鈕設計） -->
+  <header class="bg-slate-800/95 border-b border-slate-700/80 px-3 py-2.5 sm:px-6 flex items-center justify-between shadow-md z-30 flex-shrink-0">
+    <div class="flex items-center gap-2 sm:gap-3">
+      <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-md font-black text-lg">
+        ⚡
+      </div>
+      <div>
+        <h1 class="text-sm sm:text-base font-black tracking-tight text-white flex items-center gap-1.5">
+          iPad 程式碼預覽神器
+          <span class="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 font-semibold border border-blue-400/30">貼上即玩</span>
+        </h1>
+        <p class="text-[11px] text-slate-400 hidden sm:block">專為國中課堂 iPad 優化：免手指拉游標，秒跑 HTML 遊戲</p>
+      </div>
+    </div>
+
+    <!-- 核心動作大按鈕群 -->
+    <div class="flex items-center gap-2">
+      <!-- 一鍵貼上按鈕（最核心） -->
+      <button id="btn-paste" class="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs sm:text-sm transition shadow-lg shadow-blue-600/30">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        <span>一鍵貼上並執行</span>
+      </button>
+
+      <!-- 選擇檔案 -->
+      <label class="cursor-pointer flex items-center gap-1 px-3 py-2 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 font-semibold text-xs sm:text-sm transition border border-slate-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        <span class="hidden sm:inline">開啟檔案</span>
+        <input type="file" id="file-input" accept=".html,.htm,.txt" class="hidden">
+      </label>
+
+      <!-- 重新整理 -->
+      <button id="btn-reload" title="重新開始遊戲" class="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 font-semibold text-sm transition border border-slate-600">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+      </button>
+
+      <!-- 全螢幕試玩 -->
+      <button id="btn-fullscreen" title="全螢幕試玩" class="flex items-center gap-1 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold text-xs sm:text-sm transition shadow-md shadow-indigo-600/20">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+        <span class="hidden sm:inline">全螢幕</span>
+      </button>
+
+      <!-- 下載 HTML 檔 -->
+      <button id="btn-download" title="下載成 HTML 檔繳交作業" class="p-2 rounded-xl bg-slate-700 hover:bg-slate-600 active:scale-95 text-slate-200 transition border border-slate-600 hidden sm:flex">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+      </button>
+
+      <!-- iPad 秘笈教學按鈕 -->
+      <button id="btn-help" class="px-2.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold text-xs transition border border-amber-500/40 flex items-center gap-1">
+        <span>💡 秘笈</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- 主預覽視窗容器 -->
+  <main class="flex-1 relative bg-slate-950 flex flex-col overflow-hidden">
+    
+    <!-- 預設歡迎引導畫面（未貼上程式碼時） -->
+    <div id="welcome-view" class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center z-10 bg-slate-900">
+      <div class="max-w-md w-full bg-slate-800/90 border border-slate-700 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-md">
+        
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-3xl mx-auto mb-4 shadow-lg shadow-blue-500/30">
+          🎮
+        </div>
+
+        <h2 class="text-xl sm:text-2xl font-black text-white mb-2">準備好測試你的遊戲了嗎？</h2>
+        <p class="text-xs sm:text-sm text-slate-400 mb-6 leading-relaxed">
+          在 Google Canvas 點擊 <span class="text-amber-400 font-bold">📋 複製按鈕</span>，<br>
+          再點擊下方大按鈕，直接開玩！
+        </p>
+
+        <button id="btn-hero-paste" class="w-full py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-extrabold text-base sm:text-lg shadow-xl shadow-blue-600/40 active:scale-95 transition flex items-center justify-center gap-2 mb-4">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+          點我一鍵貼上並開跑！
+        </button>
+
+        <div class="flex items-center justify-center gap-4 text-xs text-slate-400">
+          <button id="btn-toggle-editor" class="text-blue-400 hover:underline">或點此手動貼上程式碼</button>
+          <span>•</span>
+          <button id="btn-hero-help" class="text-amber-400 hover:underline">iPad 複製教學</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 真正執行程式的沙盒 iframe -->
+    <iframe id="preview-frame" 
+            class="w-full h-full border-none bg-white hidden"
+            sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups allow-downloads"
+            allow="autoplay; fullscreen; clipboard-write; gyroscope; accelerometer">
+    </iframe>
+
+    <!-- 底部抽屜：手動程式碼編輯區（可折疊） -->
+    <div id="editor-drawer" class="absolute bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 transition-all duration-300 transform translate-y-full z-20 flex flex-col" style="height: 45vh;">
+      <div class="flex items-center justify-between px-4 py-2 bg-slate-900 border-b border-slate-700">
+        <span class="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+          <span>📝 程式碼編輯區</span>
+          <span id="char-count" class="text-[10px] text-slate-500 font-normal">0 字</span>
+        </span>
+        <div class="flex items-center gap-2">
+          <button id="btn-drawer-run" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition">
+            ▶ 執行修改
+          </button>
+          <button id="btn-drawer-close" class="p-1 rounded-lg hover:bg-slate-800 text-slate-400">
+            ✕
+          </button>
+        </div>
+      </div>
+      <textarea id="code-input" class="flex-1 w-full p-3 bg-slate-950 text-slate-200 font-mono text-xs resize-none outline-none custom-scroll" placeholder="在這裡貼上你的 HTML 程式碼..."></textarea>
+    </div>
+
+    <!-- 浮動開啟編輯器的小按鈕（當遊戲全屏時使用） -->
+    <button id="btn-floating-code" class="absolute bottom-4 right-4 z-20 px-3 py-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-600/80 backdrop-blur shadow-lg hidden">
+      📝 查看/修改代碼
+    </button>
+
+  </main>
+
+  <!-- iPad 複製密笈 Modal 彈窗 -->
+  <div id="modal-help" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-800 border border-slate-700 rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl text-left relative overflow-hidden">
+      
+      <div class="flex justify-between items-center mb-4 pb-3 border-b border-slate-700">
+        <h3 class="text-lg font-black text-white flex items-center gap-2">
+          <span>💡</span> iPad 免手拉複製秘笈
+        </h3>
+        <button id="btn-close-help" class="text-slate-400 hover:text-white p-1 rounded-lg text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs sm:text-sm text-slate-300">
+        
+        <div class="p-3.5 rounded-2xl bg-slate-900/80 border border-slate-700 flex gap-3 items-start">
+          <div class="w-7 h-7 rounded-full bg-amber-500/20 text-amber-400 font-black flex items-center justify-center flex-shrink-0 text-xs">1</div>
+          <div>
+            <div class="font-bold text-white mb-0.5">千萬不要用手指拉游標！</div>
+            <p class="text-slate-400 leading-relaxed text-[11px] sm:text-xs">
+              幾百行程式碼如果用手指拖曳反白，手指滑到螢幕邊緣會卡死或跳掉，只會複製到一半導致程式出錯。
+            </p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-500/40 flex gap-3 items-start">
+          <div class="w-7 h-7 rounded-full bg-blue-500 text-white font-black flex items-center justify-center flex-shrink-0 text-xs">2</div>
+          <div>
+            <div class="font-bold text-blue-300 mb-0.5">點 Google Canvas 右上角的「📋 複製圖示」</div>
+            <p class="text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+              在程式碼方塊的右上角，有一顆<strong>小小的雙層正方形圖示</strong>。只要手指按它一下，整包幾百行程式碼就已經複製好了！
+            </p>
+          </div>
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-emerald-950/40 border border-emerald-500/40 flex gap-3 items-start">
+          <div class="w-7 h-7 rounded-full bg-emerald-500 text-white font-black flex items-center justify-center flex-shrink-0 text-xs">3</div>
+          <div>
+            <div class="font-bold text-emerald-300 mb-0.5">切回本網站，按「一鍵貼上並執行」</div>
+            <p class="text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+              若 Safari 跳出「是否允許貼上？」，點選<strong>「允許」</strong>，你的遊戲就會立刻跳出來！
+            </p>
+          </div>
+        </div>
+
+      </div>
+
+      <div class="mt-6 pt-3 border-t border-slate-700 text-center">
+        <button id="btn-know-help" class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm transition">
+          我知道了，回預覽器！
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 操作邏輯腳本 -->
+  <script>
+    const previewFrame = document.getElementById('preview-frame');
+    const welcomeView = document.getElementById('welcome-view');
+    const codeInput = document.getElementById('code-input');
+    const charCount = document.getElementById('char-count');
+    const editorDrawer = document.getElementById('editor-drawer');
+    const btnFloatingCode = document.getElementById('btn-floating-code');
+
+    let currentHTML = "";
+
+    // 執行 HTML 渲染
+    function runCode(html) {
+      if (!html || !html.trim()) {
+        alert("目前剪貼簿或輸入框內沒有任何程式碼喔！");
+        return;
+      }
+      currentHTML = html;
+      welcomeView.classList.add('hidden');
+      previewFrame.classList.remove('hidden');
+      btnFloatingCode.classList.remove('hidden');
+
+      // 使用 srcdoc 直接載入程式碼
+      previewFrame.srcdoc = html;
+      codeInput.value = html;
+      charCount.textContent = html.length.toLocaleString() + ' 字';
+    }
+
+    // 一鍵貼上函數
+    async function pasteAndRun() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          if (text && text.trim().length > 0) {
+            runCode(text);
+            return;
+          }
+        }
+        // 如果瀏覽器限制 clipboard 存取，自動開啟抽屜並聚焦
+        openDrawer();
+        codeInput.focus();
+        alert("提示：請在下方的黑色編輯區長按，點選「貼上」，然後按「執行修改」！");
+      } catch (err) {
+        console.warn("Clipboard access blocked:", err);
+        openDrawer();
+        codeInput.focus();
+        alert("請在下方的文字區長按點「貼上」，再按右上方綠色的「執行修改」！");
+      }
+    }
+
+    // 綁定一鍵貼上按鈕
+    document.getElementById('btn-paste').addEventListener('click', pasteAndRun);
+    document.getElementById('btn-hero-paste').addEventListener('click', pasteAndRun);
+
+    // 檔案選取
+    document.getElementById('file-input').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        runCode(event.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    // 重新整理
+    document.getElementById('btn-reload').addEventListener('click', function() {
+      if (currentHTML) {
+        previewFrame.srcdoc = currentHTML;
+      }
+    });
+
+    // 全螢幕功能
+    document.getElementById('btn-fullscreen').addEventListener('click', function() {
+      if (previewFrame.requestFullscreen) {
+        previewFrame.requestFullscreen();
+      } else if (previewFrame.webkitRequestFullscreen) {
+        previewFrame.webkitRequestFullscreen(); // Safari/iOS
+      }
+    });
+
+    // 下載單檔 HTML
+    document.getElementById('btn-download').addEventListener('click', function() {
+      if (!currentHTML) {
+        alert("請先載入或貼上程式碼！");
+        return;
+      }
+      const blob = new Blob([currentHTML], { type: "text/html;charset=utf-8" });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = "my_game_" + new Date().toISOString().slice(0,10) + ".html";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+
+    // 編輯器抽屜控制
+    function openDrawer() {
+      editorDrawer.classList.remove('translate-y-full');
+    }
+    function closeDrawer() {
+      editorDrawer.classList.add('translate-y-full');
+    }
+
+    document.getElementById('btn-toggle-editor').addEventListener('click', openDrawer);
+    document.getElementById('btn-floating-code').addEventListener('click', openDrawer);
+    document.getElementById('btn-drawer-close').addEventListener('click', closeDrawer);
+
+    document.getElementById('btn-drawer-run').addEventListener('click', function() {
+      runCode(codeInput.value);
+      closeDrawer();
+    });
+
+    codeInput.addEventListener('input', function() {
+      charCount.textContent = codeInput.value.length.toLocaleString() + ' 字';
+    });
+
+    // 秘笈 Modal 控制
+    const modalHelp = document.getElementById('modal-help');
+    function showHelp() { modalHelp.classList.remove('hidden'); }
+    function hideHelp() { modalHelp.classList.add('hidden'); }
+
+    document.getElementById('btn-help').addEventListener('click', showHelp);
+    document.getElementById('btn-hero-help').addEventListener('click', showHelp);
+    document.getElementById('btn-close-help').addEventListener('click', hideHelp);
+    document.getElementById('btn-know-help').addEventListener('click', hideHelp);
+  </script>
+</body>
+</html>
